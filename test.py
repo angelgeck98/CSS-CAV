@@ -1,6 +1,12 @@
 import carla
 import random
 import time
+import subprocess
+
+# Run CARLA
+cwd = 'C:/Users/jrr77/Documents/Github/CSS-CAV' # Change to .env? so we don't all have to adjust
+subprocess.Popen(['CarlaUE4.exe', '-quality-level=Low'], cwd=cwd)
+time.sleep(5)  # Wait for the simulator to start
 
 # Connect to the CARLA server
 client = carla.Client('localhost', 2000)
