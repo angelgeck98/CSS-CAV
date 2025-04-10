@@ -58,6 +58,21 @@ for vehicle in world.get_actors().filter('vehicle.*'):
 
 print("Running vehicles in autopilot for 120 seconds...")
 print("-------------------------------------------------")
+# Set up a collision sensor for each vehicle
+collision_sensors = []
+
+def log_collision(event):
+    actor = event.actor
+    other_actor = event.other_actor
+    impulse = event.normal_impulse
+    print(f"Collision detected! {actor.type_id} collided with {other_actor.type_id} with impulse {impulse}.")
+
+for vehicle in world.get_actors().filter('vehicle.*'):
+    collision_sensor_bp = blueprint_library.find('sensor.other.collision')
+    collision_sensor = world.spawn_actor(collision_sensor_bp, carla.Transform(), attach_to=vehicle)
+    collision_sensor.listen(log_collision)
+    collision_sensors.append(collision_sensor)
+    
 time.sleep(120)
 
 # Destroy the cars
