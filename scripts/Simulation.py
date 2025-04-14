@@ -9,12 +9,13 @@
 # Perform simulation without firewall, logging for evaluation, adjusts affinity scores
 # Perform simulation WITH firewall, logging for evaluation, using affinity scores from before
 import carla
+import os
 import random
 import time
 import subprocess
 
 # Run CARLA
-cwd = 'C:/Users/jrr77/Documents/Github/CSS-CAV'
+cwd = os.getcwd()
 port = 2000
 subprocess.Popen(['CarlaUE4.exe', '-quality-level=Low', f'-carla-port={port}'], cwd=cwd)
 time.sleep(5)
