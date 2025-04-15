@@ -14,10 +14,15 @@ import random
 import time
 import subprocess
 
+from Car import Car
+
 # Run CARLA
-cwd = os.getcwd()
+cwd = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor"
 port = 2000
-subprocess.Popen(['CarlaUE4.exe', '-quality-level=Low', f'-carla-port={port}'], cwd=cwd)
+
+exe_path = os.path.join(cwd, "CarlaUE4.exe")
+
+subprocess.Popen([exe_path, '-quality-level=Low', f'-carla-port={port}'])
 time.sleep(5)
 
 # Connect to the CARLA server
@@ -27,4 +32,13 @@ world = client.get_world()
 traffic_manager = client.get_trafficmanager()
 tm_port = traffic_manager.get_port()
 
-# 
+# spawning in a random car
+car1 = Car()
+car1.build_car(world)
+
+spectator = world.get_spectator()
+transform = car1.vehicle.get_transform()
+spectator.set_transform(carla.Transform(
+    transform.location + carla.Location(z=50),  # Move camera up
+    carla.Rotation(pitch=-90)                  # Look straight down
+))
