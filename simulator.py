@@ -87,13 +87,26 @@ class Simulator:
         self.evaluation.record_event(log_message)
 
 	# Run the simulation
-    def run(self):
-        print("Running simulation...")
+    def run_simulation_phase(self, defense_enabled):
+        self.cars = []
+        self.collision_sensors = []
+        # self.evaluation = Evaluation()  # Angel's code - uncomment if evaluation is needed
+        
+        print(f"Running simulation phase with defense_enabled={defense_enabled}...")
+        self.spawn_vehicles(defense_enabled)
+        self.attach_collision_sensors()
+        
         start_time = time.time()
         while time.time() - start_time < self.run_duration:
             for car_obj in self.cars:
                 car_obj.update()
-            time.sleep(1)  # Wait one second between simulation steps
+            time.sleep(1)
+        
+        self.cleanup()
+        print("Simulation phase completed.")
+        # For evaluation, uncomment the following lines:
+        # print("Evaluation logs:")
+        # self.evaluation.summarize()
 
 	# Destroy all vehicles and sensors
     def cleanup(self):
@@ -108,12 +121,9 @@ class Simulator:
             if car_obj.vehicle is not None:
                 actor_ids.append(car_obj.vehicle.id)
                 
-        # Use CARLA's batch command for efficient actor destruction.
         if actor_ids:
             commands = [carla.command.DestroyActor(x) for x in actor_ids]
-            # 'apply_batch_sync' ensures that the commands are applied immediately.
-            self.client.apply_batch_sync(commands)
-            
+            self.client.apply_batch_sync(commands)     
         print("Cleanup complete.")
 
 if __name__ == "__main__":
@@ -122,12 +132,9 @@ if __name__ == "__main__":
 
     start_carla(carla_path, port, cwd=carla_path)
 
-    simulator = Simulator(run_duration=60)  # Run simulation for 60 seconds
+    simulator = Simulator(run_duration=60)
     simulator.connect()
-    simulator.spawn_vehicles()
-    simulator.attach_collision_sensors()
     
-    print("Starting simulation...")
-    simulator.run()
-    simulator.cleanup()
-    # simulator.evaluation.summarize() # Or however evaluation class is produced
+    simulator.run_simulation_phase(defense_enabled=False)
+    time.sleep(10)
+    simulator.run_simulation_phase(defense_enabled=True)
