@@ -103,32 +103,6 @@ class Simulator:
         '''
         print("Finished spawning vehicles.")
 
-	# Attach collision sensors to vehicles
-    # NOTE: Only attaches collision sensors, either rewrite or add more methods
-    # https://carla.readthedocs.io/en/latest/core_sensors/
-    def attach_collision_sensors(self):
-        print("Attaching collision sensors to vehicles...")
-        blueprint_library = self.world.get_blueprint_library()
-        collision_sensor_bp = blueprint_library.find('sensor.other.collision')
-        
-        for car_obj in self.cars:
-            sensor_transform = carla.Transform(carla.Location(x=0.0, z=2.0))
-            sensor = self.world.spawn_actor(collision_sensor_bp, sensor_transform, attach_to=car_obj.vehicle)
-            # Use a lambda to capture the vehicle ID alongside collision event
-            sensor.listen(lambda event, cid=car_obj.vehicle.id: self.log_collision(event, cid))
-            car_obj.attach_sensor("collision", sensor)
-            self.collision_sensors.append(sensor)
-        print("Collision sensors attached.")
-
-	# Used by collision sensors to log collisions
-	# @ANGEL: lmk if you want this for your evaluation class
-    def log_collision(self, event, car_id):
-        other_actor = event.other_actor
-        impulse = event.normal_impulse
-        log_message = f"Vehicle {car_id} collided with {other_actor.type_id} (impulse: {impulse})"
-        print(log_message)
-        self.evaluation.record_event(log_message)
-
 	# Run the simulation
     def run_simulation_phase(self, defense_enabled):
         self.cars = []
@@ -137,12 +111,13 @@ class Simulator:
         
         print(f"Running simulation phase with defense_enabled={defense_enabled}...")
         self.spawn_vehicles()
-        self.attach_collision_sensors()
+        # self.attach_collision_sensors()
         
         start_time = time.time()
         while time.time() - start_time < self.run_duration:
             for car_obj in self.cars:
-                car_obj.update()
+                #car_obj.update() 
+                pass
             time.sleep(1)
         
         self.cleanup()
