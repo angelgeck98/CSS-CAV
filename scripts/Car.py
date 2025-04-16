@@ -17,7 +17,7 @@ class Car():
     def build_car(self, behavior, world, spawn_point):
         if self.vehicle is not None:
             print("Car already built!")
-            return
+            return self.vehicle
 
         blueprint_library = world.get_blueprint_library()
 
@@ -29,9 +29,11 @@ class Car():
             vehicle_bp = blueprint_library.find('vehicle.tesla.cybertruck')
 
         self.vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
+        
+        # Hopefully fixes AttributeError: 'NoneType' object has no attribute 'set_autopilot'
+        if self.vehicle is None:
+            print("Spawn failed for behavior:", behavior)
+            return None
 
-        # need to connect Car to the traffic manager - was having issues with it
-        self.vehicle.set_autopilot(True) 
+        self.vehicle.set_autopilot(True)
         return self.vehicle
-
-
