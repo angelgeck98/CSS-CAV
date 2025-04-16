@@ -2,19 +2,29 @@ import carla
 import subprocess
 import random
 import time
-# from car import Car                # Kayla's code
+
+from scripts.Car import Car          # Kayla's code
+from mvp.attack.attacker import Attacker
+from mvp.defense.perception_defender import PerceptionDefender
 # from evaluation import Evaluation  # Angel's code
 # assuming Car uses attacker/defender code from Yaz's code
 
 # Starts the CARLA simulator 
-def start_carla(carla_path, port, cwd):
-    subprocess.Popen(['CarlaUE4.exe', '-quality-level=Low', f'-carla-port={port}'], cwd=cwd)
+
+# changed by Kayla so this works on my PC, get rid of stuff between meows to go back to normal
+# also change how this is called in main
+#def start_carla(carla_path, port, cwd):
+    #subprocess.Popen(['CarlaUE4.exe', '-quality-level=Low', f'-carla-port={port}'], cwd=cwd)
+
+    # meow
+def start_carla(carla_path, port):
+    subprocess.Popen([carla_path, '-quality-level=Low', f'-carla-port={port}'])
+    # meow
     print("Starting CARLA simulator...")
-    time.sleep(5)
+    time.sleep(10)
 
 class Simulator:
-    def __init__(self, host='localhost', port=2000, run_duration=60):
-        self.host = host
+    def __init__(self, port=2000, run_duration=60):
         self.port = port
         self.run_duration = run_duration
         self.client = None
@@ -25,8 +35,8 @@ class Simulator:
 
 	# Initialize the CARLA client and world
     def connect(self):
-        self.client = carla.Client(self.host, self.port)
-        print(f"Connecting to CARLA server at {self.host}:{self.port}...")
+        self.client = carla.Client('localhost', self.port)
+        print(f"Connecting to CARLA server at localhost:{self.port}...")
         self.client.set_timeout(60.0)
         self.world = self.client.get_world()
         print("Successfully connected to CARLA server.")
@@ -34,13 +44,45 @@ class Simulator:
 	# Spawn vehicles in the simulation
     def spawn_vehicles(self):
         print("Spawning vehicles...")
-        blueprint_library = self.world.get_blueprint_library()
-        vehicle_blueprints = list(blueprint_library.filter('vehicle.*'))
         spawn_points = self.world.get_map().get_spawn_points()
         random.shuffle(spawn_points)
+
+        '''
+        # Test basic Car spawn
+        for i in range(0, 25):
+            if not spawn_points:
+                break
+            spawn_point = spawn_points.pop()
+            car = Car()
+            vehicle = car.build_car("defend", self.world, spawn_point)
+            if vehicle is not None:
+                self.cars.append(car)
+                print(f"Spawned car{i} at {spawn_point}")
+        '''
+        # Test attack spawn
+        for i in range(0, 25):
+            if not spawn_points:
+                break
+            spawn_point = spawn_points.pop()
+            attack = Attacker()
+            vehicle = attack.build_car("attack", self.world, spawn_point)
+            if vehicle is not None:
+                self.cars.append(attack)
+                print(f"Spawned attacker{i} at {spawn_point}")
+
+        '''
+        # Test defense spawn
+        # doesn't work because of load_map() in perception_defender (probably bc of my path?)
+        spawn_point = spawn_points.pop()
+        defend1 = PerceptionDefender()
+        defend1.build_car("defend", self.world, spawn_point)
+        self.cars.append(defend1)
+        print(f"Spawned defender at {spawn_point}")
+        '''
         
+
+        '''
         attacker_chance = 0.3
-        
         for bp in vehicle_blueprints:
             if not spawn_points:
                 break
@@ -58,6 +100,7 @@ class Simulator:
                 # )
                 # self.cars.append(car_obj)
                 print(f"Spawned vehicle {actor.id} at {spawn_point} | Attacker: {is_attacker}")
+        '''
         print("Finished spawning vehicles.")
 
 	# Attach collision sensors to vehicles
@@ -93,7 +136,7 @@ class Simulator:
         # self.evaluation = Evaluation()  # Angel's code - uncomment if evaluation is needed
         
         print(f"Running simulation phase with defense_enabled={defense_enabled}...")
-        self.spawn_vehicles(defense_enabled)
+        self.spawn_vehicles()
         self.attach_collision_sensors()
         
         start_time = time.time()
@@ -127,10 +170,11 @@ class Simulator:
         print("Cleanup complete.")
 
 if __name__ == "__main__":
-    carla_path = 'E:/DEV/CSS-CAV'
+    carla_path = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor\CarlaUE4.exe"
     port = 2000
 
-    start_carla(carla_path, port, cwd=carla_path)
+    #start_carla(carla_path, port, cwd=carla_path)
+    start_carla(carla_path, port)
 
     simulator = Simulator(run_duration=60)
     simulator.connect()

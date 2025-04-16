@@ -140,7 +140,7 @@ class PerceptionDefender(Car):
         perception_range = bbox_to_polygon(perception_range)
 
         return area.intersection(perception_range).area > 0.95 * area.area
-
+    
     def _load_map(self, map_names=None):
         self.lane_areas_map  ={}
         if map_names is None:
