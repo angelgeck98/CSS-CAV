@@ -8,10 +8,9 @@ from mvp.config import data_root
 from mvp.data.util import write_pcd, read_pcd, sort_lidar_points
 from mvp.visualize.attack import draw_attack
 from scripts.Car import Car
-from scripts.Simulation import world
 
-blueprint_library = world.get_blueprint_library()
-spawn_points = world.get_map().get_spawn_points()
+#blueprint_library = world.get_blueprint_library()
+#spawn_points = world.get_map().get_spawn_points()
 
 
 class Attacker(Car):
@@ -21,7 +20,9 @@ class Attacker(Car):
         self.dataset = None
         self.attack_list = []
 
-    def build_car(self):
+    def build_car(self, world):
+        blueprint_library = world.get_blueprint_library()
+        spawn_points = world.get_map().get_spawn_points()
         vehicle_bp = blueprint_library.find('vehicle.tesla.cybertruck')
         available_colors = vehicle_bp.get_attribute('color').recommended_values
         vehicle_bp.set_attribute('color', random.choice(available_colors))

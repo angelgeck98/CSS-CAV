@@ -5,14 +5,14 @@ from shapely.ops import unary_union
 from shapely.geometry import MultiPolygon
 import pickle
 
-from .defender import Defender
+from scripts.Car import Car
 from mvp.data.util import bbox_sensor_to_map
 from mvp.tools.polygon_space import bbox_to_polygon
 from mvp.config import data_root
 from mvp.tools.iou import iou3d
 
 
-class PerceptionDefender(Defender):
+class PerceptionDefender(Car):
     thres = 1.7
     sigma = 0
 
@@ -22,6 +22,7 @@ class PerceptionDefender(Defender):
         self.lane_areas_map = None
         self._load_map()
 
+    # need to implement score function to actually give the maps a score
     def score(self, metrics):
         return 0
 
