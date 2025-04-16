@@ -11,15 +11,16 @@ from mvp.defense.perception_defender import PerceptionDefender
 
 # Starts the CARLA simulator 
 
-# changed by Kayla so this works on my PC, get rid of stuff between meows to go back to normal
-# also change how this is called in main
-#def start_carla(carla_path, port, cwd):
-    #subprocess.Popen(['CarlaUE4.exe', '-quality-level=Low', f'-carla-port={port}'], cwd=cwd)
+'''
+def start_carla(carla_path, port, cwd):
+    subprocess.Popen(['CarlaUE4.exe', '-quality-level=Low', f'-carla-port={port}'], cwd=cwd)
+    print("Starting CARLA simulator...")
+    time.sleep(10)
+'''
 
-    # meow
+# Kayla's working CARLA starter
 def start_carla(carla_path, port):
     subprocess.Popen([carla_path, '-quality-level=Low', f'-carla-port={port}'])
-    # meow
     print("Starting CARLA simulator...")
     time.sleep(10)
 
@@ -47,9 +48,8 @@ class Simulator:
         spawn_points = self.world.get_map().get_spawn_points()
         random.shuffle(spawn_points)
 
-        '''
-        # Test basic Car spawn
-        for i in range(0, 25):
+        # Using basic Car spawn instead of defender bc it's not working
+        for i in range(1, 6):
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
@@ -58,9 +58,9 @@ class Simulator:
             if vehicle is not None:
                 self.cars.append(car)
                 print(f"Spawned car{i} at {spawn_point}")
-        '''
-        # Test attack spawn
-        for i in range(0, 25):
+
+        # Spawn in Attackers
+        for i in range(1, 16):
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
@@ -70,37 +70,20 @@ class Simulator:
                 self.cars.append(attack)
                 print(f"Spawned attacker{i} at {spawn_point}")
 
-        '''
-        # Test defense spawn
-        # doesn't work because of load_map() in perception_defender (probably bc of my path?)
-        spawn_point = spawn_points.pop()
-        defend1 = PerceptionDefender()
-        defend1.build_car("defend", self.world, spawn_point)
-        self.cars.append(defend1)
-        print(f"Spawned defender at {spawn_point}")
-        '''
         
-
         '''
-        attacker_chance = 0.3
-        for bp in vehicle_blueprints:
+        # Spawn in Defenders
+        for i in range(1, 6):
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
-            actor = self.world.try_spawn_actor(bp, spawn_point)
-			# https://carla.readthedocs.io/en/latest/core_actors/
-            if actor is not None:
-                is_attacker = random.random() < attacker_chance
-                # How I would imagine we would use the Car class, will change for Kayla's code
-				# car_obj = Car(
-                #     vehicle_actor=actor,
-                #     is_attacker=is_attacker,
-                #     attack_strength=0.7,
-                #     initial_affinity=1.0
-                # )
-                # self.cars.append(car_obj)
-                print(f"Spawned vehicle {actor.id} at {spawn_point} | Attacker: {is_attacker}")
+            defend = PerceptionDefender()
+            vehicle = defend.build_car("defend", self.world, spawn_point)
+            if vehicle is not None:
+                self.cars.append(defend)
+                print(f"Spawned defender{i} at {spawn_point}")
         '''
+
         print("Finished spawning vehicles.")
 
 	# Run the simulation

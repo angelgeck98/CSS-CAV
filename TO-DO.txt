@@ -1,11 +1,8 @@
 Tasks I think we have left to do :P may not be entirely up-to-date
 
-- finish integrating Car.py with Jordan's simulation
 - add in score function to perception_defender.py
-- make sure attacker.py is properly attached to Car.py (need to fix how attacker handles world)
-- making the Cars work properly w/ traffic manager (??)
 - get Cars speaking to each other & passing LiDAR data
-- removal and spoofing attacks (make sure they workd properly)
+- removal and spoofing attacks (make sure they work properly)
 - make the firewall
 - evaluation stuff
 - README.md

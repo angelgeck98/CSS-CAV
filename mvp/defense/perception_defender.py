@@ -24,7 +24,27 @@ class PerceptionDefender(Car):
 
     # need to implement score function to actually give the maps a score
     def score(self, metrics):
-        return 0
+        total_spoof_area = 0.0
+        total_removal_area = 0.0
+        spoof_count = 0
+        removal_count = 0
+
+        for frame_metrics in metrics:
+            if not isinstance(frame_metrics, dict):
+                continue
+            for vehicle_metrics in frame_metrics.values():
+                if "spoof" in vehicle_metrics:
+                    for (_, free_area_error, _, _) in vehicle_metrics["spoof"]:
+                        total_spoof_area += free_area_error
+                        spoof_count += 1
+                if "remove" in vehicle_metrics:
+                    for(_, occupied_area_error, _, _) in vehicle_metrics["remove"]:
+                        total_removal_area += occupied_area_error
+                        removal_count += 1
+
+        score = total_spoof_area + total_removal_area
+        return score
+
 
     def run_core(self, pred_bboxes, gt_bboxes, occupied_areas, free_areas, ego_area):
         metrics = {"spoof": [], "remove": []}
@@ -140,7 +160,7 @@ class PerceptionDefender(Car):
         perception_range = bbox_to_polygon(perception_range)
 
         return area.intersection(perception_range).area > 0.95 * area.area
-    
+
     def _load_map(self, map_names=None):
         self.lane_areas_map  ={}
         if map_names is None:
@@ -149,3 +169,4 @@ class PerceptionDefender(Car):
         for map_name in map_names:
             with open(os.path.join(data_root, "carla/{}_lane_areas.pkl".format(map_name)), "rb") as f:
                 self.lane_areas_map[map_name] = pickle.load(f)
+
