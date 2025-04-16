@@ -21,7 +21,7 @@ def start_carla(carla_path, port):
     subprocess.Popen([carla_path, '-quality-level=Low', f'-carla-port={port}'])
     # meow
     print("Starting CARLA simulator...")
-    time.sleep(10)
+    time.sleep(15)
 
 class Simulator:
     def __init__(self, port=2000, run_duration=60):
@@ -37,7 +37,7 @@ class Simulator:
     def connect(self):
         self.client = carla.Client('localhost', self.port)
         print(f"Connecting to CARLA server at localhost:{self.port}...")
-        self.client.set_timeout(60.0)
+        self.client.set_timeout(5.0)
         self.world = self.client.get_world()
         print("Successfully connected to CARLA server.")
 
@@ -116,9 +116,11 @@ class Simulator:
         start_time = time.time()
         while time.time() - start_time < self.run_duration:
             for car_obj in self.cars:
-                #car_obj.update() 
-                pass
-            time.sleep(1)
+                car_obj.send_v2x_message()
+            time.sleep(0.5)
+            for car_obj in self.cars:
+                fused = car_obj.fuse_collaborative_data()
+            time.sleep(0.5)
         
         self.cleanup()
         print("Simulation phase completed.")
@@ -145,7 +147,7 @@ class Simulator:
         print("Cleanup complete.")
 
 if __name__ == "__main__":
-    carla_path = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor\CarlaUE4.exe"
+    carla_path = r"C:\CARLA-DEV\CarlaUE4.exe"
     port = 2000
 
     #start_carla(carla_path, port, cwd=carla_path)
