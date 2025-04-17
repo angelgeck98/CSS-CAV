@@ -44,7 +44,7 @@ class Simulator:
             """Get global point cloud data from all vehicles"""
             point_clouds = []
             for car_obj in self.cars: 
-                if hasattr(car_obj, 'lidar'): #Make sure car has Lidar
+                if hasattr(car_obj, 'lidar'):
                     point_cloud = car_obj.lidar
                     point_clouds.append(point_cloud)
             return np.vstack(point_clouds) if point_clouds else None
@@ -128,14 +128,11 @@ class Simulator:
 	# Run the simulation
     def run_simulation_phase(self, defense_enabled):
         self.cars = []
-        self.collision_sensors = []
-        # self.evaluation = Evaluation()  # Angel's code - uncomment if evaluation is needed
         self.frame_id = 0
         
-        print(f"Running simulation phase with defense_enabled={defense_enabled}...")
         self.spawn_vehicles()
-        # self.attach_collision_sensors()
         
+        print(f"Running simulation phase with defense_enabled={defense_enabled}...")
         start_time = time.time()
         while time.time() - start_time < self.run_duration:
             if defense_enabled:
@@ -148,8 +145,8 @@ class Simulator:
                             car_detector=car, # Pass the last car_obj or specific detector
                             frame_id = self.frame_id
                         )
-                    if isinstance(car, PerceptionDefender):
-                        car.send_v2x_message(car.affinity_score, False) 
+                    #if isinstance(car, PerceptionDefender):
+                        #car.send_v2x_message(car.affinity_score, False) 
 
                     self.frame_id += 1 # Increment Frame counter  
                     pass
@@ -163,13 +160,13 @@ class Simulator:
                             car_detector=car, # Pass the last car_obj or specific detector
                             frame_id = self.frame_id
                         )
-                    Car.send_v2x_message(car)
+                    #Car.send_v2x_message(car)
 
                     self.frame_id += 1 # Increment Frame counter  
                     pass
             time.sleep(0.1)
         
-        time.sleep(1)
+        time.sleep(1) # Wait for last frame to be processed
         self.cleanup()
         print("Simulation phase completed.")
 
@@ -177,10 +174,6 @@ class Simulator:
     def cleanup(self):
         print("Cleaning up sensors and vehicles...")
         actor_ids = []
-        # Collect sensor actor IDs.
-        for sensor in self.collision_sensors:   
-            if sensor is not None:
-                actor_ids.append(sensor.id)
         # Collect vehicle actor IDs.
         for car_obj in self.cars:
             if car_obj.vehicle is not None:
@@ -207,7 +200,8 @@ if __name__ == "__main__":
     # Phase 1 Evaluation - run without firewall
     simulator.run_simulation_phase(defense_enabled=False)
     print("\nPhase 1 Evaluation Results:")
-    print(evaluator.calculate_final_metrics())
+    metrics_phase1 = evaluator.calculate_final_metrics()
+    print(metrics_phase1)
     #evaluator.visualize_results()
 
     time.sleep(10)
@@ -215,5 +209,14 @@ if __name__ == "__main__":
     # Phase 2 Evaluation - run with firewall
     simulator.run_simulation_phase(defense_enabled=True)
     print("\nPhase 2 Evaluation Results:")
-    print(evaluator.calculate_final_metrics())
+    metrics_phase2 = evaluator.calculate_final_metrics()
+    print(metrics_phase2)
     #evaluator.visualize_results()
+    
+    # Show the final results
+    print("\n--------------------------")
+    print("Final Evaluation Results:")
+    print("\nPhase 1 Metrics:")
+    print(metrics_phase1)
+    print("\nPhase 2 Metrics:")
+    print(metrics_phase2)
