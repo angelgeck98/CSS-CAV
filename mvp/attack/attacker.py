@@ -10,8 +10,8 @@ from mvp.visualize.attack import draw_attack
 from scripts.Car import Car
 
 class Attacker(Car):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, lidar_queue):
+        super().__init__(lidar_queue)
         self.attack_list = None
         self.dataset = None
         self.attack_list = []

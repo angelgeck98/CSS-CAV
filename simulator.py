@@ -2,6 +2,7 @@ import carla
 import subprocess
 import random
 import time
+import queue
 
 from scripts.Car import Car          # Kayla's code
 from mvp.attack.attacker import Attacker
@@ -36,8 +37,8 @@ class Simulator:
 
 	# Initialize the CARLA client and world
     def connect(self):
-        self.client = carla.Client('localhost', self.port)
-        print(f"Connecting to CARLA server at localhost:{self.port}...")
+        self.client = carla.Client('127.0.0.1', self.port)
+        print(f"Connecting to CARLA server at 127.0.0.1:{self.port}...")
         self.client.set_timeout(60.0)
         self.world = self.client.get_world()
         print("Successfully connected to CARLA server.")
@@ -53,7 +54,7 @@ class Simulator:
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
-            car = Car()
+            car = Car(lidar_queue)
             vehicle = car.build_car("defend", self.world, spawn_point)
             if vehicle is not None:
                 self.cars.append(car)
@@ -64,7 +65,7 @@ class Simulator:
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
-            attack = Attacker()
+            attack = Attacker(lidar_queue)
             vehicle = attack.build_car("attack", self.world, spawn_point)
             if vehicle is not None:
                 self.cars.append(attack)
@@ -98,10 +99,10 @@ class Simulator:
         
         start_time = time.time()
         while time.time() - start_time < self.run_duration:
-            for car_obj in self.cars:
-                #car_obj.update() 
+            for car in self.cars:
+                car.fuse_peer_scans(self.world) 
                 pass
-            time.sleep(1)
+            time.sleep(0.1)
         
         self.cleanup()
         print("Simulation phase completed.")
@@ -114,7 +115,7 @@ class Simulator:
         print("Cleaning up sensors and vehicles...")
         actor_ids = []
         # Collect sensor actor IDs.
-        for sensor in self.collision_sensors:
+        for sensor in self.collision_sensors:   
             if sensor is not None:
                 actor_ids.append(sensor.id)
         # Collect vehicle actor IDs.
@@ -130,6 +131,7 @@ class Simulator:
 if __name__ == "__main__":
     carla_path = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor\CarlaUE4.exe"
     port = 2000
+    lidar_queue = queue.Queue()
 
     #start_carla(carla_path, port, cwd=carla_path)
     start_carla(carla_path, port)
