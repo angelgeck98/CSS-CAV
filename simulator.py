@@ -149,7 +149,7 @@ class Simulator:
                             frame_id = self.frame_id
                         )
                     if isinstance(car, PerceptionDefender):
-                        car.send_v2x_message() 
+                        car.send_v2x_message(car.affinity_score, False) 
 
                     self.frame_id += 1 # Increment Frame counter  
                     pass
@@ -169,12 +169,9 @@ class Simulator:
                     pass
             time.sleep(0.1)
         
+        time.sleep(1)
         self.cleanup()
         print("Simulation phase completed.")
-
-        # Output evaluation
-        print("Evaluation logs:")
-        self.evaluation.summarize()
 
 	# Destroy all vehicles and sensors
     def cleanup(self):
@@ -201,7 +198,7 @@ if __name__ == "__main__":
 
     start_carla(carla_path, port)
 
-    simulator = Simulator(run_duration=60)
+    simulator = Simulator(run_duration=30)
     evaluator = DetectionEvaluator()
 
     simulator.set_evaluator(evaluator)
@@ -211,7 +208,7 @@ if __name__ == "__main__":
     simulator.run_simulation_phase(defense_enabled=False)
     print("\nPhase 1 Evaluation Results:")
     print(evaluator.calculate_final_metrics())
-    evaluator.visualize_results()
+    #evaluator.visualize_results()
 
     time.sleep(10)
 
@@ -219,4 +216,4 @@ if __name__ == "__main__":
     simulator.run_simulation_phase(defense_enabled=True)
     print("\nPhase 2 Evaluation Results:")
     print(evaluator.calculate_final_metrics())
-    evaluator.visualize_results()
+    #evaluator.visualize_results()
