@@ -1,0 +1,11 @@
+# Python version note (not enforced by pip directly):
+# Make sure to manually install Python 3.7.9
+
+numpy
+pygame
+open3d
+pyyaml
+opencv-python
+shapely
+scipy
+matplotlib

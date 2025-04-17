@@ -78,8 +78,8 @@ class Simulator:
 
 	# Initialize the CARLA client and world
     def connect(self):
-        self.client = carla.Client('127.0.0.1', self.port)
-        print(f"Connecting to CARLA server at 127.0.0.1:{self.port}...")
+        self.client = carla.Client('localhost', self.port)
+        print(f"Connecting to CARLA server at localhost:{self.port}...")
         self.client.set_timeout(60.0)
         self.world = self.client.get_world()
         print("Successfully connected to CARLA server.")
@@ -91,7 +91,7 @@ class Simulator:
         random.shuffle(spawn_points)
 
         # Using basic Car spawn instead of defender bc it's not working
-        for i in range(1, 6):
+        for i in range(1, 16):
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
@@ -192,13 +192,11 @@ class Simulator:
             commands = [carla.command.DestroyActor(x) for x in actor_ids]
             self.client.apply_batch_sync(commands)     
         print("Cleanup complete.")
-
 if __name__ == "__main__":
-    carla_path = r"C:\Users\jrr77\Documents\GitHub\CSS-CAV\CarlaUE4.exe"
+    carla_path = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor\CarlaUE4.exe"
     port = 2000
     lidar_queue = queue.Queue()
 
-    #start_carla(carla_path, port, cwd=carla_path)
     start_carla(carla_path, port)
 
     simulator = Simulator(run_duration=60)

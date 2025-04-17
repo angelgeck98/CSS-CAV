@@ -22,12 +22,11 @@ class PerceptionDefender(Car):
         self.lane_areas_map = None
         self._load_map()
 
-    # need to implement score function to actually give the maps a score
+    # Calculate the total area that has been attacked
+    # Generates an attack score; higher scores indicate higher areas of attack
     def score(self, metrics):
         total_spoof_area = 0.0
         total_removal_area = 0.0
-        spoof_count = 0
-        removal_count = 0
 
         for frame_metrics in metrics:
             if not isinstance(frame_metrics, dict):
@@ -36,11 +35,9 @@ class PerceptionDefender(Car):
                 if "spoof" in vehicle_metrics:
                     for (_, free_area_error, _, _) in vehicle_metrics["spoof"]:
                         total_spoof_area += free_area_error
-                        spoof_count += 1
                 if "remove" in vehicle_metrics:
                     for(_, occupied_area_error, _, _) in vehicle_metrics["remove"]:
                         total_removal_area += occupied_area_error
-                        removal_count += 1
 
         score = total_spoof_area + total_removal_area
         return score

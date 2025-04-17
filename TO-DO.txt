@@ -1,9 +1,0 @@
-Tasks I think we have left to do :P may not be entirely up-to-date
-
-- add in score function to perception_defender.py
-- get Cars speaking to each other & passing LiDAR data
-- removal and spoofing attacks (make sure they work properly)
-- make the firewall
-- evaluation stuff
-- README.md
-- put all the good stuff into main branch at the end

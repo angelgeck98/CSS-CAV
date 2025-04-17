@@ -69,12 +69,11 @@ class Car():
     ##########Evaluation stuff##########
 
     def affinity_score_update(self, score):
-        # affinity score is updated based on taking the average of the old and new score 
-        # to determine a "percentage" of trustworthiness
         self.score_list = np.append(self.score_list, score)
         temp_score = self.affinity_score + score
         self.affinity_score = temp_score / 2.0
     
+    # Spawns in a CARLA model of a car
     def build_car(self, behavior, world, spawn_point):
         if self.vehicle is not None:
             print("Car already built!")
@@ -82,6 +81,7 @@ class Car():
 
         blueprint_library = world.get_blueprint_library()
 
+        # Changes how attackers and defenders look
         if behavior == "defend":
             vehicle_bp = blueprint_library.find('vehicle.tesla.model3')
             available_colors = vehicle_bp.get_attribute('color').recommended_values
@@ -91,7 +91,7 @@ class Car():
 
         self.vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
         
-        # Hopefully fixes AttributeError: 'NoneType' object has no attribute 'set_autopilot'
+        # Fixes AttributeError when trying to add sensors to Cars
         if self.vehicle is None:
             print("Spawn failed for behavior:", behavior)
             return None
@@ -102,6 +102,7 @@ class Car():
         
         return self.vehicle
     
+    # Attaches LiDAR sensors to the Car
     def attach_lidar(self, world):
         bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
         bp.set_attribute('channels','32')
