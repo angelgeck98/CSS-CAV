@@ -16,8 +16,8 @@ class PerceptionDefender(Car):
     thres = 1.7
     sigma = 0
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, lidar_queue):
+        super().__init__(lidar_queue)
         self.name = "perception"
         self.lane_areas_map = None
         self._load_map()
