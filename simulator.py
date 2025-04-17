@@ -3,6 +3,9 @@ import subprocess
 import random
 import time
 import queue
+import numpy as np 
+from scripts.Evaluation import DetectionEvaluator
+
 
 from scripts.Car import Car          # Kayla's code
 from mvp.attack.attacker import Attacker
@@ -34,6 +37,44 @@ class Simulator:
         self.cars = []
         # self.evaluation = Evaluation()  # Angel's code, may or may not be needed
         self.collision_sensors = []
+
+        #Evaluation Sguff 
+        self.point_cloud_data = None 
+        self.ground_truth_boxes = None 
+        self.frame_id = 0 
+        self.evalutator = None
+
+        def get_point_cloud(self):
+            """Get global point cloud data from all vehicles"""
+            point_clouds = []
+            for car_obj in self.cars: 
+                if hasattr(car_obj, 'collab_scan') and car_obj.collab_scan is not None:
+                    # Use the collaborative scan which includes fused data from all vehicles
+                    point_clouds.append(car_obj.collab_scan[:, :3])  # Only take x,y,z coordinates
+            return np.vstack(point_clouds) if point_clouds else np.array([])
+            
+        def get_vehicle_boxes(self):
+            """Get ground truth boxes for all vehicles"""
+            ground_truth = []
+            for car_obj in self.cars:
+                if car_obj.vehicle is not None:
+                    transform = car_obj.vehicle.get_transform()
+                    bbox = car_obj.vehicle.bounding_box
+
+                    gt_box = np.array([
+                        transform.location.x,
+                        transform.location.y,
+                        transform.location.z, 
+                        bbox.extent.x * 2, 
+                        bbox.extent.y * 2,
+                        bbox.extent.z * 2,
+                        transform.rotation.yaw
+                    ])
+
+                    ground_truth.append(gt_box)
+            return np.array(ground_truth)
+        
+        ######
 
 	# Initialize the CARLA client and world
     def connect(self):
@@ -87,11 +128,17 @@ class Simulator:
 
         print("Finished spawning vehicles.")
 
+    
+    def set_evaluator(self, evaluator):
+        """Add evaluator to simulator"""
+        self.evaluator = evaluator
+
 	# Run the simulation
     def run_simulation_phase(self, defense_enabled):
         self.cars = []
         self.collision_sensors = []
         # self.evaluation = Evaluation()  # Angel's code - uncomment if evaluation is needed
+        self.frame_id = 0
         
         print(f"Running simulation phase with defense_enabled={defense_enabled}...")
         self.spawn_vehicles()
@@ -103,6 +150,24 @@ class Simulator:
                 car.fuse_peer_scans(self.world) 
                 pass
             time.sleep(0.1)
+
+            for car_obj in self.cars: 
+                car_obj.send_v2x_message()
+
+            #Run evaluation if set
+            if self.evaluator is not None: 
+                self.evaluator.evaluate_frame(
+                    simulator=self, 
+                    car_detector=car_obj, # Pass the last car_obj or specific detector
+                    frame_id = self.frame_id
+                )
+
+            self.frame_id += 1 # Increment Frame counter 
+            time.sleep(0.5)
+
+            for car_obj in self.cars:
+                fused = car_obj.fuse_collaborative_data()
+            time.sleep(0.5)
         
         self.cleanup()
         print("Simulation phase completed.")
@@ -135,8 +200,20 @@ if __name__ == "__main__":
     start_carla(carla_path, port)
 
     simulator = Simulator(run_duration=60)
+    evaluator = DetectionEvaluator()
+
+    simulator.set_evaluator(evaluator)
     simulator.connect()
     
     simulator.run_simulation_phase(defense_enabled=False)
+    print("\nPhase 1 Evaluation Results:")
+    print(evaluator.calculate_final_metrics())
+    evaluator.visualize_results()
+
     time.sleep(10)
+
+
     simulator.run_simulation_phase(defense_enabled=True)
+    print("\nPhase 2 Evaluation Results:")
+    print(evaluator.calculate_final_metrics())
+    evaluator.visualize_results()

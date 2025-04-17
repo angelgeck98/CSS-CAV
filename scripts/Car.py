@@ -1,6 +1,7 @@
 import carla
 import random
 import numpy as np
+
 class Car():
     def __init__(self, lidar_queue):
         self.name = "base"
@@ -12,7 +13,61 @@ class Car():
         # receive the shared queue
         self.lidar_queue = lidar_queue
 
-    # Updates affinity score by taking average of old and new score to determine trustworthiness
+        #Evaluation Stuff 
+        self.detected_vehicles = [] #Detected vehicle boxes 
+        self.detection_scores = []  #Confidence Scores
+       
+
+    def get_detected_vehicles(self):
+        """Return detected vehicle boxes for evaluation"""
+        if self.vehicle is None or self.collab_scan is None:
+            return np.array([])
+        
+        detected = []
+        # Get vehicles this car can detect
+        for actor in self.vehicle.get_world().get_actors():
+            if actor.type_id.startswith('vehicle') and actor.id != self.vehicle.id:
+                transform = actor.get_transform()
+                bbox = actor.bounding_box
+                
+                # Check if points from collab_scan fall within the bounding box
+                # Convert points to vehicle's local coordinate system
+                points = self.collab_scan[:, :3]
+                points_homogeneous = np.hstack((points, np.ones((points.shape[0], 1))))
+                world_matrix = np.array(transform.get_matrix())
+                local_points = (np.linalg.inv(world_matrix) @ points_homogeneous.T).T[:, :3]
+                
+                # Check if any points fall within the bounding box
+                in_box = np.all(np.abs(local_points) <= bbox.extent, axis=1)
+                if np.any(in_box):
+                    # Format matching evaluator's expected format
+                    box = np.array([
+                        transform.location.x,
+                        transform.location.y,
+                        transform.location.z,
+                        bbox.extent.x * 2,
+                        bbox.extent.y * 2,
+                        bbox.extent.z * 2,
+                        transform.rotation.yaw
+                    ])
+                    detected.append(box)
+        
+        return np.array(detected)
+    
+    def get_affinity_scores(self):
+        """Return affinity scores for evaluation"""
+        detected_vehicles = self.get_detected_vehicles()
+        if len(detected_vehicles) > 0:
+            return np.array([self.affinity_score] * len(detected_vehicles))
+        return np.array([])
+    
+    def process_lidar_data(self):
+        """Update detections for evaluation"""
+        self.detected_vehicles = self.get_detected_vehicles()
+        self.detection_scores = self.get_affinity_scores()
+            
+    ##########Evaluation stuff##########
+
     def affinity_score_update(self, score):
         self.score_list = np.append(self.score_list, score)
         temp_score = self.affinity_score + score
@@ -68,6 +123,7 @@ class Car():
         points = np.frombuffer(data.raw_data, dtype=np.float32).reshape(-1,4)
         self.lidar_queue.put((self.vehicle.id, data.frame, points))
         self.own_scan = points
+        self.process_lidar_data()
 
     # Fuses the lidar data from the peer vehicles with the own vehicle's lidar data
     # https://numpy.org/doc/stable/reference/generated/numpy.linalg.inv.html
@@ -90,3 +146,4 @@ class Car():
             fused = np.hstack((ego_pts, pts[:,3:4]))
             scans.append(fused)
         self.collab_scan = np.vstack(scans)
+        self.process_lidar_data() #Update detections 
