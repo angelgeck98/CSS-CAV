@@ -2,6 +2,7 @@ import carla
 import subprocess
 import random
 import time
+import numpy
 
 from scripts.Car import Car          # Kayla's code
 from mvp.attack.attacker import Attacker
@@ -32,6 +33,23 @@ class Simulator:
         self.cars = []
         # self.evaluation = Evaluation()  # Angel's code, may or may not be needed
         self.collision_sensors = []
+
+        ###ANGEL EVALUATION DATA STUFF####
+        self.point_cloud_data = None 
+        self.ground_truth_boxes = None 
+        self.frame_id = 0 
+        self.evaluator = None # Will store DetectionEvaluator
+        ###ANGEL EVALUATION DATA STUFF####
+
+    #Get point cloud
+    def get_point_cloud(self):
+        """Get global point cloud data from all vehicles"""
+        point_clouds = []
+        for car_obj in self.cars:
+            if hasattr(car_obj, 'lidar_sensor'): #MAKE sure car has LiDAR
+                point_cloud = car_obj.lidar_sensor.get_data()
+                point_clouds.append(point_cloud)
+        return np.vstack(point_clouds) if point_clouds else None
 
 	# Initialize the CARLA client and world
     def connect(self):
