@@ -145,8 +145,8 @@ class Simulator:
                             car_detector=car, # Pass the last car_obj or specific detector
                             frame_id = self.frame_id
                         )
-                    #if isinstance(car, PerceptionDefender):
-                        #car.send_v2x_message(car.affinity_score, False) 
+                    if isinstance(car, PerceptionDefender):
+                        car.send_v2x_message(car.affinity_score, False) 
 
                     self.frame_id += 1 # Increment Frame counter  
                     pass
@@ -160,7 +160,7 @@ class Simulator:
                             car_detector=car, # Pass the last car_obj or specific detector
                             frame_id = self.frame_id
                         )
-                    #Car.send_v2x_message(car)
+                    Car.send_v2x_message(car)
 
                     self.frame_id += 1 # Increment Frame counter  
                     pass
