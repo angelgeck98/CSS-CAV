@@ -1,3 +1,7 @@
+third_party/OpenCOOD/*
+third_party/SqueezeSegV3/*
+**/__pycache__/
+carla-env/*
 AdditionalMaps_0.9.15.zip
 CarlaUE4.exe
 CarlaUE4/AssetRegistry.bin
