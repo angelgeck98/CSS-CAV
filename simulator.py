@@ -35,8 +35,6 @@ class Simulator:
         self.client = None
         self.world = None
         self.cars = []
-        # self.evaluation = Evaluation()  # Angel's code, may or may not be needed
-        self.collision_sensors = []
 
         #Evaluation Sguff 
         self.point_cloud_data = None 
@@ -44,7 +42,7 @@ class Simulator:
         self.frame_id = 0 
         self.evalutator = None
 
-        def get_point_cloud(self):
+    def get_point_cloud(self):
             """Get global point cloud data from all vehicles"""
             point_clouds = []
             for car_obj in self.cars: 
@@ -53,7 +51,7 @@ class Simulator:
                     point_clouds.append(point_cloud)
                 return np.vstack(point_clouds) if point_clouds else None
             
-        def get_vehicle_boxes(self):
+    def get_vehicle_boxes(self):
             """Get ground truth boxes for all vehicles"""
             ground_truth = []
             for car_obj in self.cars:
@@ -73,9 +71,6 @@ class Simulator:
 
                     ground_truth.append(gt_box)
             return np.array(ground_truth)
-        
-        ######
-
 	# Initialize the CARLA client and world
     def connect(self):
         self.client = carla.Client('127.0.0.1', self.port)
@@ -147,27 +142,20 @@ class Simulator:
         start_time = time.time()
         while time.time() - start_time < self.run_duration:
             for car in self.cars:
-                car.fuse_peer_scans(self.world) 
+                car.fuse_peer_scans(self.world)
+                #Run evaluation if set
+                if self.evaluator is not None: 
+                    self.evaluator.evaluate_frame(
+                        simulator=self, 
+                        car_detector=car, # Pass the last car_obj or specific detector
+                        frame_id = self.frame_id
+                    )
+
+                self.frame_id += 1 # Increment Frame counter  
                 pass
             time.sleep(0.1)
 
-            for car_obj in self.cars: 
-                car_obj.send_v2x_message()
-
-            #Run evaluation if set
-            if self.evaluator is not None: 
-                self.evaluator.evaluate_frame(
-                    simulator=self, 
-                    car_detector=car_obj, # Pass the last car_obj or specific detector
-                    frame_id = self.frame_id
-                )
-
-            self.frame_id += 1 # Increment Frame counter 
-            time.sleep(0.5)
-
-            for car_obj in self.cars:
-                fused = car_obj.fuse_collaborative_data()
-            time.sleep(0.5)
+            
         
         self.cleanup()
         print("Simulation phase completed.")
@@ -192,22 +180,6 @@ class Simulator:
             commands = [carla.command.DestroyActor(x) for x in actor_ids]
             self.client.apply_batch_sync(commands)     
         print("Cleanup complete.")
-        
-    def get_point_cloud(self):
-        # Get the latest point cloud from the queue
-        if not lidar_queue.empty():
-            return lidar_queue.get()
-        return None
-
-    def get_vehicle_boxes(self):
-        # Get the ground truth boxes from the simulation
-        boxes = []
-        for car_obj in self.cars:
-            if car_obj.vehicle is not None:
-                bounding_box = car_obj.vehicle.bounding_box
-                bounding_box.location = car_obj.vehicle.get_transform().location
-                boxes.append(bounding_box)
-        return boxes
     
 if __name__ == "__main__":
     carla_path = r"C:\Users\jrr77\Documents\GitHub\CSS-CAV\CarlaUE4.exe"
