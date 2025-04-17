@@ -168,3 +168,7 @@ class Car():
     def send_v2x_message(self):
         # placeholder
         print("V2X Message from Car class")
+        
+    def get_v2x_message(self):
+        # placeholder
+        return self.affinity_score

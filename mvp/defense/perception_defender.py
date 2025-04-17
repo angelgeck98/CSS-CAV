@@ -178,4 +178,5 @@ class PerceptionDefender(Car):
                 # ignore message being sent
                 print("V2X Message from PerceptionDefender class - score rejected ")
             else:
-                print(Car.send_v2x_message(self) + " - score accepted")
+                message = Car.get_v2x_message(self)
+                print(f"{message} - score accepted")
