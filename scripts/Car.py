@@ -17,13 +17,14 @@ class Car():
         self.detected_vehicles = [] #Detected vehicle boxes 
         self.detection_scores = []  #Confidence Scores
        
-
+    ########## EVALUATION START ##########
+    # Return detected vehicle boxes for evaluation
     def get_detected_vehicles(self):
-        """Return detected vehicle boxes for evaluation"""
         if self.vehicle is None or self.collab_scan is None:
             return np.array([])
         
         detected = []
+
         # Get vehicles this car can detect
         for actor in self.vehicle.get_world().get_actors():
             if actor.type_id.startswith('vehicle') and actor.id != self.vehicle.id:
@@ -55,20 +56,21 @@ class Car():
         
         return np.array(detected)
     
+    # Return affinity scores for evaluation
     def get_affinity_scores(self):
-        """Return affinity scores for evaluation"""
         detected_vehicles = self.get_detected_vehicles()
         if len(detected_vehicles) > 0:
             return np.array([self.affinity_score] * len(detected_vehicles))
         return np.array([])
     
+    # Update detections for evaluation
     def process_lidar_data(self):
-        """Update detections for evaluation"""
         self.detected_vehicles = self.get_detected_vehicles()
         self.detection_scores = self.get_affinity_scores()
             
-    ##########Evaluation stuff##########
+    ########## EVALUATION END ##########
 
+    # Take the average of old and new scores to determine trustworthiness percentage
     def affinity_score_update(self, score):
         self.score_list = np.append(self.score_list, score)
         temp_score = self.affinity_score + score
@@ -159,3 +161,8 @@ class Car():
 
         self.collab_scan = np.vstack(scans)
         self.process_lidar_data() #Update detections 
+
+    # Sends message that alters a Car's LiDAR sensor data
+    def send_v2x_message(self):
+        # placeholder
+        print("V2X Message from Car class")

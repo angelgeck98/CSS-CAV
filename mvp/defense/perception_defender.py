@@ -167,3 +167,15 @@ class PerceptionDefender(Car):
             with open(os.path.join(data_root, "carla/{}_lane_areas.pkl".format(map_name)), "rb") as f:
                 self.lane_areas_map[map_name] = pickle.load(f)
 
+    # Implements the firewall
+    # If the affinity score is below 95%, then the car isn't trustworthy and their message is ignored
+    # If the Car is trustworthy, call the Car class message sender (the data is accepted)
+    def send_v2x_message(self, affinity_score, use_parent=False):
+        if use_parent:
+            Car.send_v2x_message(self)
+        else:
+            if affinity_score < 0.95:
+                # ignore message being sent
+                print("V2X Message from PerceptionDefender class - score rejected ")
+            else:
+                print(Car.send_v2x_message(self) + " - score accepted")

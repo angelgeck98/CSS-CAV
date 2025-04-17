@@ -6,7 +6,6 @@ import queue
 import numpy as np 
 from scripts.Evaluation import DetectionEvaluator
 
-
 from scripts.Car import Car
 from mvp.attack.attacker import Attacker
 from mvp.defense.perception_defender import PerceptionDefender
@@ -28,31 +27,31 @@ def start_carla(carla_path, port):
 
 class Simulator:
     def __init__(self, port=2000, run_duration=60):
+        # CARLA variables
         self.port = port
         self.run_duration = run_duration
         self.client = None
         self.world = None
         self.cars = []
-        # self.evaluation = Evaluation()  # Angel's code, may or may not be needed
         self.collision_sensors = []
 
-        #Evaluation Stuff 
+        # Evaluation variables
         self.point_cloud_data = None 
         self.ground_truth_boxes = None 
         self.frame_id = 0 
         self.evalutator = None
 
+        # Get global point cloud data from all vehicles
         def get_point_cloud(self):
-            """Get global point cloud data from all vehicles"""
             point_clouds = []
             for car_obj in self.cars: 
                 if hasattr(car_obj, 'collab_scan') and car_obj.collab_scan is not None:
                     # Use the collaborative scan which includes fused data from all vehicles
                     point_clouds.append(car_obj.collab_scan[:, :3])  # Only take x,y,z coordinates
             return np.vstack(point_clouds) if point_clouds else np.array([])
-            
+        
+        # Get ground truth boxes for all vehicles
         def get_vehicle_boxes(self):
-            """Get ground truth boxes for all vehicles"""
             ground_truth = []
             for car_obj in self.cars:
                 if car_obj.vehicle is not None:
@@ -71,8 +70,6 @@ class Simulator:
 
                     ground_truth.append(gt_box)
             return np.array(ground_truth)
-        
-        ######
 
 	# Initialize the CARLA client and world
     def connect(self):
@@ -82,14 +79,15 @@ class Simulator:
         self.world = self.client.get_world()
         print("Successfully connected to CARLA server.")
 
-	# Spawn vehicles in the simulation
+	# Spawn vehicles into the simulation
     def spawn_vehicles(self):
         print("Spawning vehicles...")
         spawn_points = self.world.get_map().get_spawn_points()
         random.shuffle(spawn_points)
 
-        # Using basic Car spawn instead of defender bc it's not working
-        for i in range(1, 16):
+        '''
+        # Spawn in basic Cars
+        for i in range(1, 6):
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
@@ -98,9 +96,10 @@ class Simulator:
             if vehicle is not None:
                 self.cars.append(car)
                 print(f"Spawned car{i} at {spawn_point}")
+        '''
 
         # Spawn in Attackers
-        for i in range(1, 16):
+        for i in range(1, 6):
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
@@ -110,10 +109,8 @@ class Simulator:
                 self.cars.append(attack)
                 print(f"Spawned attacker{i} at {spawn_point}")
 
-        
-        '''
         # Spawn in Defenders
-        for i in range(1, 6):
+        for i in range(1, 16):
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
@@ -122,13 +119,11 @@ class Simulator:
             if vehicle is not None:
                 self.cars.append(defend)
                 print(f"Spawned defender{i} at {spawn_point}")
-        '''
-
+        
         print("Finished spawning vehicles.")
 
-    
+    # Add evaluator to simulator
     def set_evaluator(self, evaluator):
-        """Add evaluator to simulator"""
         self.evaluator = evaluator
 
 	# Run the simulation
@@ -149,10 +144,16 @@ class Simulator:
                 pass
             time.sleep(0.1)
 
-            for car_obj in self.cars: 
-                car_obj.send_v2x_message()
+            # Change the message that is sent when firewall is active
+            if defense_enabled:
+                for car_obj in self.cars:
+                    if isinstance(car_obj, PerceptionDefender):
+                        car_obj.send_v2x_message() # update this so that it passes in the affinity score of the Attacker
+            else:
+                for car_obj in self.cars: 
+                    Car.send_v2x_message(car_obj)
 
-            #Run evaluation if set
+            # Run evaluation if set
             if self.evaluator is not None: 
                 self.evaluator.evaluate_frame(
                     simulator=self, 
@@ -169,7 +170,8 @@ class Simulator:
         
         self.cleanup()
         print("Simulation phase completed.")
-        # For evaluation, uncomment the following lines:
+
+        # Output evaluation
         print("Evaluation logs:")
         self.evaluation.summarize()
 
