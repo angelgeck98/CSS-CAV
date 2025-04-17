@@ -46,10 +46,10 @@ class Simulator:
             """Get global point cloud data from all vehicles"""
             point_clouds = []
             for car_obj in self.cars: 
-                if hasattr(car_obj, 'lidar_sensor'): #Make sure car has Lidar
-                    point_cloud = car_obj.lidar_sensor.get_data()
+                if hasattr(car_obj, 'lidar'): #Make sure car has Lidar
+                    point_cloud = car_obj.lidar
                     point_clouds.append(point_cloud)
-                return np.vstack(point_clouds) if point_clouds else None
+            return np.vstack(point_clouds) if point_clouds else None
             
     def get_vehicle_boxes(self):
             """Get ground truth boxes for all vehicles"""

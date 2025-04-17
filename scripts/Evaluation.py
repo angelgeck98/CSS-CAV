@@ -105,6 +105,17 @@ class DetectionEvaluator:
                 if gt_idx in matched_gt:
                     continue  # Skip already matched ground truth boxes
                 
+                def is_valid_box(box):
+                    # box = [x, y, z, length, width, height, yaw]
+                    if not np.isfinite(box).all():
+                        return False
+                    if box[3] <= 0 or box[4] <= 0:
+                        return False
+                    return True
+                
+                if not is_valid_box(det_box) or not is_valid_box(gt_box):
+                    continue # Skip invalid boxes   
+                
                 iou = self.calculate_iou(det_box, gt_box)
                 if iou > max_iou:
                     max_iou = iou

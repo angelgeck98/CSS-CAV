@@ -110,6 +110,8 @@ class Car():
     # https://carla.readthedocs.io/en/0.9.15/ref_sensors/#lidar-sensor
     def on_lidar(self, data):
         points = np.frombuffer(data.raw_data, dtype=np.float32).reshape(-1,4)
+        valid = ~np.isnan(points).any(axis=1) & ~np.isinf(points).any(axis=1)
+        points = points[valid]
         self.lidar_queue.put((self.vehicle.id, data.frame, points))
         self.own_scan = points
         self.process_lidar_data()
@@ -135,4 +137,4 @@ class Car():
             fused = np.hstack((ego_pts, pts[:,3:4]))
             scans.append(fused)
         self.collab_scan = np.vstack(scans)
-        self.process_lidar_data() #Update detections 
+        self.process_lidar_data() #Update detections
