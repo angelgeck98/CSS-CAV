@@ -3,8 +3,7 @@ Repo for further implementation of CAD outlined in USENIX security 2024 paper "O
 
 ## Requirements
 
-- Something about how much space this will take up 
-- Free space > []GB (at least 20GB for CARLA)
+- Free space > 40GB 
 - Python 3.7.9 
 
 ## References
@@ -47,7 +46,7 @@ pip install carla
 # Run simulator and output evaluation logs.
 python simulator.py
 ```
-This will create the Python 3.7.9 virtual environment, install dependencies, and execute the CARLA simulation. 
+This will create the Python 3.7.9 virtual environment, install dependencies, and execute the CARLA simulation. The simulation will output evaluation results. 
 
 ## Functionality
-In the final version of the application, a simulator spawns in Attacker and Defender vehicles in a CARLA environment. The simulation runs through twice - once without using the firewall, and a second time while using the firewall - and outputs evaluation results. Ideally, the Cars will send each other LiDAR sensor data that is filtered through the firewall; if a Car is determined to be "good" then their data will be accepted, and a "bad" Car's data will be rejected. Currently, the V2X communication is not working properly, but placeholder messages are being output instead. 
+In the final version of the application, a simulator spawns in Attacker and Defender vehicles in a CARLA environment. The simulation runs through twice - once without using the firewall, and a second time while using the firewall - and outputs evaluation results. Ideally, the Cars will send each other LiDAR sensor data that is filtered through the firewall; if a Car is determined to be "good" then their data will be accepted, and a "bad" Car's data will be rejected. Evaluation functions properly to show that a firewall increases the amount of attack detections and true positives. Components that need improvement include properly incorporating scores into the Cars' communication and updating send_v2x_message method to manipulate LiDAR sensor data and behavior of the simulated Cars. Further implementations could include further testing with larger numbers of vehicles, on different maps, and with different types of attacks being implemented (such as early, intermediate, and advanced spoofing or removal). 
