@@ -7,9 +7,9 @@ import random
 from mvp.config import data_root
 from mvp.data.util import write_pcd, read_pcd, sort_lidar_points
 from mvp.visualize.attack import draw_attack
-from scripts.Car import Car
+#from scripts.Car import Car
 
-class Attacker(Car):
+class Attacker():
     def __init__(self):
         super().__init__()
         self.attack_list = None

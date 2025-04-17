@@ -289,10 +289,10 @@ class Simulator:
         print("Cleanup complete.")
 
 if __name__ == "__main__":
-    carla_path = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor\CarlaUE4.exe"
+    carla_path = 'C:/Users/lopez/Downloads/Carla/WindowsNoEditor'
     port = 2000
 
-    start_carla(carla_path, port)
+    #start_carla(carla_path, port)
 
     simulator = Simulator(run_duration=60)
     simulator.connect()
