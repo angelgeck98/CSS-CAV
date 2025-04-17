@@ -20,7 +20,7 @@ class Car():
 
     def get_detected_vehicles(self):
         """Return detected vehicle boxes for evaluation"""
-        if self.vehicle is None:
+        if self.vehicle is None or self.collab_scan is None:
             return np.array([])
         
         detected = []
@@ -30,17 +30,27 @@ class Car():
                 transform = actor.get_transform()
                 bbox = actor.bounding_box
                 
-                # Format matching evaluator's expected format
-                box = np.array([
-                    transform.location.x,
-                    transform.location.y,
-                    transform.location.z,
-                    bbox.extent.x * 2,
-                    bbox.extent.y * 2,
-                    bbox.extent.z * 2,
-                    transform.rotation.yaw
-                ])
-                detected.append(box)
+                # Check if points from collab_scan fall within the bounding box
+                # Convert points to vehicle's local coordinate system
+                points = self.collab_scan[:, :3]
+                points_homogeneous = np.hstack((points, np.ones((points.shape[0], 1))))
+                world_matrix = np.array(transform.get_matrix())
+                local_points = (np.linalg.inv(world_matrix) @ points_homogeneous.T).T[:, :3]
+                
+                # Check if any points fall within the bounding box
+                in_box = np.all(np.abs(local_points) <= bbox.extent, axis=1)
+                if np.any(in_box):
+                    # Format matching evaluator's expected format
+                    box = np.array([
+                        transform.location.x,
+                        transform.location.y,
+                        transform.location.z,
+                        bbox.extent.x * 2,
+                        bbox.extent.y * 2,
+                        bbox.extent.z * 2,
+                        transform.rotation.yaw
+                    ])
+                    detected.append(box)
         
         return np.array(detected)
     

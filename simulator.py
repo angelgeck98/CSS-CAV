@@ -48,10 +48,10 @@ class Simulator:
             """Get global point cloud data from all vehicles"""
             point_clouds = []
             for car_obj in self.cars: 
-                if hasattr(car_obj, 'lidar_sensor'): #Make sure car has Lidar
-                    point_cloud = car_obj.lidar_sensor.get_data()
-                    point_clouds.append(point_cloud)
-                return np.vstack(point_clouds) if point_clouds else None
+                if hasattr(car_obj, 'collab_scan') and car_obj.collab_scan is not None:
+                    # Use the collaborative scan which includes fused data from all vehicles
+                    point_clouds.append(car_obj.collab_scan[:, :3])  # Only take x,y,z coordinates
+            return np.vstack(point_clouds) if point_clouds else np.array([])
             
         def get_vehicle_boxes(self):
             """Get ground truth boxes for all vehicles"""
