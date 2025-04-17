@@ -89,3 +89,8 @@ class Attacker(Car):
             tmp_pcd, _ = sort_lidar_points(tmp_pcd)
             lidar = np.hstack([tmp_pcd, np.ones((tmp_pcd.shape[0], 1))])
         return lidar
+
+    # Sends message that alters a Car's LiDAR sensor data
+    def send_v2x_message(self):
+        # placeholder
+        print("V2X Message from Attacker class")

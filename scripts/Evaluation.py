@@ -59,8 +59,54 @@ class DetectionEvaluator:
         """
         Calculate IoU between two boxes
         box format: [x, y, z, length, width, height, heading_angle]
+        Returns IoU score between 0 and 1
         """
-        return iou3d(box1, box2)
+        def get_box_bounds(box):
+            x, y, z = box[0], box[1], box[2]
+            l, w, h = box[3], box[4], box[5]
+            # Get box bounds without considering rotation for simplicity
+            return {
+                'x_min': x - l/2, 'x_max': x + l/2,
+                'y_min': y - w/2, 'y_max': y + w/2,
+                'z_min': z - h/2, 'z_max': z + h/2
+            }
+
+        # Get bounds for both boxes
+        bounds1 = get_box_bounds(box1)
+        bounds2 = get_box_bounds(box2)
+
+        # Calculate intersection
+        x_intersection = max(0, min(bounds1['x_max'], bounds2['x_max']) - 
+                              max(bounds1['x_min'], bounds2['x_min']))
+        y_intersection = max(0, min(bounds1['y_max'], bounds2['y_max']) - 
+                              max(bounds1['y_min'], bounds2['y_min']))
+        z_intersection = max(0, min(bounds1['z_max'], bounds2['z_max']) - 
+                              max(bounds1['z_min'], bounds2['z_min']))
+        intersection_volume = x_intersection * y_intersection * z_intersection
+
+        # Calculate volumes of both boxes
+        volume1 = box1[3] * box1[4] * box1[5]  # length * width * height
+        volume2 = box2[3] * box2[4] * box2[5]  # length * width * height
+
+        # Calculate union
+        union_volume = volume1 + volume2 - intersection_volume
+
+        # Calculate IoU
+        if union_volume == 0:
+            return 0.0
+        
+        iou = intersection_volume / union_volume
+
+        # Add a penalty based on heading angle difference
+        # This helps account for orientation differences
+        heading_diff = abs(box1[6] - box2[6])
+        heading_diff = min(heading_diff, 2 * np.pi - heading_diff)  # Get smallest angle
+        heading_penalty = np.cos(heading_diff)  # 1 when aligned, less when misaligned
+        
+        # Combine IoU with heading penalty
+        final_score = iou * (0.8 + 0.2 * heading_penalty)  # 80% IoU, 20% heading
+
+        return max(0.0, min(1.0, final_score))  # Ensure result is between 0 and 1
 
     def evaluate_frame(self, simulator, car_detector, frame_id):
         """
@@ -186,6 +232,7 @@ class DetectionEvaluator:
             print(f"Error calculating final metrics: {e}")
             return None
 
+'''
     def visualize_results(self, frame_id=None):
         """
         Visualize evaluation results
@@ -196,8 +243,8 @@ class DetectionEvaluator:
                 frame_data = self.frame_results[frame_id]
                 draw_matplotlib(
                     frame_data["point_cloud"],
-                    gt_boxes=frame_data["gt_boxes"],
-                    pred_boxes=frame_data["detected_boxes"]
+                    gt_bboxes=frame_data["gt_boxes"],
+                    pred_bboxes=frame_data["detected_boxes"]
                 )
 
             # Plot score distributions
@@ -214,6 +261,7 @@ class DetectionEvaluator:
                 )
         except Exception as e:
             print(f"Error visualizing results: {e}")
+'''
 
 # Example usage:
 """

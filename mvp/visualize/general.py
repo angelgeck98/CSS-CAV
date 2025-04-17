@@ -43,13 +43,37 @@ def draw_bboxes_2d(ax, bboxes, bboxes_ids, color, linewidth=1):
 
 def draw_bbox_2d(ax, bboxes_id_color):
     for bboxes, bboxes_ids, color in bboxes_id_color:
-        for i in range(bboxes.shape[0]):
-            boxp = cv2.boxPoints(((bboxes[i][0], bboxes[i][1]), (bboxes[i][3], bboxes[i][4]), bboxes[i][6]/np.pi*180))
-            boxp = np.insert(boxp, boxp.shape[0], boxp[0,:], 0)
-            xs, ys = zip(*boxp)
-            ax.plot(xs, ys, linewidth=1, color=color)
-            if bboxes_ids is not None:
-                ax.text(xs[0], ys[0], str(bboxes_ids[i]), fontsize='xx-small')
+        if bboxes is not None:
+            # Convert to numpy array if it's not already
+            if not isinstance(bboxes, np.ndarray):
+                bboxes = np.array(bboxes)
+            
+            # Ensure bboxes is 2D array
+            if len(bboxes.shape) == 1:
+                bboxes = bboxes.reshape(1, -1)
+            
+            # Only proceed if we have boxes to draw
+            if bboxes.shape[0] > 0:
+                for i in range(bboxes.shape[0]):
+                    # Extract box parameters
+                    x, y = bboxes[i][0], bboxes[i][1]
+                    length, width = bboxes[i][3], bboxes[i][4]
+                    angle = bboxes[i][6]
+                    
+                    # Convert angle to degrees for cv2.boxPoints
+                    angle_deg = angle * 180 / np.pi
+                    
+                    # Create box points
+                    boxp = cv2.boxPoints(((x, y), (length, width), angle_deg))
+                    boxp = np.insert(boxp, boxp.shape[0], boxp[0,:], 0)
+                    
+                    # Draw box
+                    xs, ys = zip(*boxp)
+                    ax.plot(xs, ys, linewidth=1, color=color)
+                    
+                    # Add ID if provided
+                    if bboxes_ids is not None and i < len(bboxes_ids):
+                        ax.text(xs[0], ys[0], str(bboxes_ids[i]), fontsize='xx-small')
 
 
 def draw_polygons(ax, polygons, fill=True, border=True, color="r", alpha=1, linewidth=1):
@@ -102,8 +126,14 @@ def draw_matplotlib(pointclouds, gt_bboxes=None, pred_bboxes=None, gt_bboxes_ids
 
     total_bboxes = []
     if gt_bboxes is not None:
+        # Convert to numpy array if needed
+        if not isinstance(gt_bboxes, np.ndarray):
+            gt_bboxes = np.array(gt_bboxes)
         total_bboxes.append((gt_bboxes, gt_bboxes_ids, "g"))
     if pred_bboxes is not None:
+        # Convert to numpy array if needed
+        if not isinstance(pred_bboxes, np.ndarray):
+            pred_bboxes = np.array(pred_bboxes)
         total_bboxes.append((pred_bboxes, pred_bboxes_ids, "r"))
 
     draw_bbox_2d(ax, total_bboxes)
