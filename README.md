@@ -50,4 +50,4 @@ python simulator.py
 This will create the Python 3.7.9 virtual environment, install dependencies, and execute the CARLA simulation. 
 
 ## Functionality
-In the final version of the application, a simulator spawns in Attacker and Defender vehicles in a CARLA environment. 
+In the final version of the application, a simulator spawns in Attacker and Defender vehicles in a CARLA environment. The simulation runs through twice - once without using the firewall, and a second time while using the firewall - and outputs evaluation results. Ideally, the Cars will send each other LiDAR sensor data that is filtered through the firewall; if a Car is determined to be "good" then their data will be accepted, and a "bad" Car's data will be rejected. 

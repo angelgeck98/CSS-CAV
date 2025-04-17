@@ -13,7 +13,7 @@ class Car():
         # receive the shared queue
         self.lidar_queue = lidar_queue
 
-        #Evaluation Stuff 
+        # Evaluation Stuff 
         self.detected_vehicles = [] #Detected vehicle boxes 
         self.detection_scores = []  #Confidence Scores
        
@@ -38,7 +38,8 @@ class Car():
                 local_points = (np.linalg.inv(world_matrix) @ points_homogeneous.T).T[:, :3]
                 
                 # Check if any points fall within the bounding box
-                in_box = np.all(np.abs(local_points) <= bbox.extent, axis=1)
+                extent = np.array([bbox.extent.x, bbox.extent.y, bbox.extent.z])
+                in_box = np.all(np.abs(local_points) <= extent, axis=1)
                 if np.any(in_box):
                     # Format matching evaluator's expected format
                     box = np.array([
@@ -131,19 +132,30 @@ class Car():
         if self.own_scan is None:
             return
         scans = [self.own_scan]
-        # Was alot simpler, but had to use numpy for LiDAR 
+        
         while not self.lidar_queue.empty():
             vid, frame, pts = self.lidar_queue.get()
             if vid == self.vehicle.id:
                 continue
-            peer_transform = world.get_actor(vid).get_transform()
-            self_transform  = self.vehicle.get_transform()
-            peer_matrix = np.array(peer_transform.get_matrix())
-            self_matrix  = np.array(self_transform.get_matrix())
-            homogeneous_coords = np.hstack((pts[:, :3], np.ones((pts.shape[0],1))))
-            world_pts = (peer_matrix @ homogeneous_coords.T).T
-            ego_pts   = (np.linalg.inv(self_matrix) @ world_pts.T).T[:, :3]
-            fused = np.hstack((ego_pts, pts[:,3:4]))
-            scans.append(fused)
+            try:
+                peer_transform = world.get_actor(vid).get_transform()
+                self_transform  = self.vehicle.get_transform()
+                peer_matrix = np.array(peer_transform.get_matrix())
+                self_matrix = np.array(self_transform.get_matrix())
+
+                homogeneous_coords = np.hstack((pts[:, :3], np.ones((pts.shape[0], 1))))
+                world_pts = (peer_matrix @ homogeneous_coords.T).T
+                inv_self_matrix = np.linalg.inv(self_matrix)
+                ego_pts = (inv_self_matrix @ world_pts.T).T[:, :3]
+
+                fused = np.hstack((ego_pts, pts[:, 3:4]))
+                scans.append(fused)
+            except np.linalg.LinAlgError:
+                print(f"[ERROR] Matrix inversion failed for vehicle {self.vehicle.id}")
+                continue
+            except Exception as e:
+                print(f"[ERROR] Unexpected failure while processing vehicle {vid}: {e}")
+                continue
+
         self.collab_scan = np.vstack(scans)
         self.process_lidar_data() #Update detections 

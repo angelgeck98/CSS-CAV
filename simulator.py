@@ -7,11 +7,9 @@ import numpy as np
 from scripts.Evaluation import DetectionEvaluator
 
 
-from scripts.Car import Car          # Kayla's code
+from scripts.Car import Car
 from mvp.attack.attacker import Attacker
 from mvp.defense.perception_defender import PerceptionDefender
-# from evaluation import Evaluation  # Angel's code
-# assuming Car uses attacker/defender code from Yaz's code
 
 # Starts the CARLA simulator 
 
@@ -38,7 +36,7 @@ class Simulator:
         # self.evaluation = Evaluation()  # Angel's code, may or may not be needed
         self.collision_sensors = []
 
-        #Evaluation Sguff 
+        #Evaluation Stuff 
         self.point_cloud_data = None 
         self.ground_truth_boxes = None 
         self.frame_id = 0 
@@ -172,8 +170,8 @@ class Simulator:
         self.cleanup()
         print("Simulation phase completed.")
         # For evaluation, uncomment the following lines:
-        # print("Evaluation logs:")
-        # self.evaluation.summarize()
+        print("Evaluation logs:")
+        self.evaluation.summarize()
 
 	# Destroy all vehicles and sensors
     def cleanup(self):
@@ -192,6 +190,7 @@ class Simulator:
             commands = [carla.command.DestroyActor(x) for x in actor_ids]
             self.client.apply_batch_sync(commands)     
         print("Cleanup complete.")
+
 if __name__ == "__main__":
     carla_path = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor\CarlaUE4.exe"
     port = 2000
@@ -205,6 +204,7 @@ if __name__ == "__main__":
     simulator.set_evaluator(evaluator)
     simulator.connect()
     
+    # Phase 1 Evaluation - run without firewall
     simulator.run_simulation_phase(defense_enabled=False)
     print("\nPhase 1 Evaluation Results:")
     print(evaluator.calculate_final_metrics())
@@ -212,7 +212,7 @@ if __name__ == "__main__":
 
     time.sleep(10)
 
-
+    # Phase 2 Evaluation - run with firewall
     simulator.run_simulation_phase(defense_enabled=True)
     print("\nPhase 2 Evaluation Results:")
     print(evaluator.calculate_final_metrics())
