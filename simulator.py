@@ -113,7 +113,7 @@ class Simulator:
             if not spawn_points:
                 break
             spawn_point = spawn_points.pop()
-            defend = PerceptionDefender()
+            defend = PerceptionDefender(lidar_queue)
             vehicle = defend.build_car("defend", self.world, spawn_point)
             if vehicle is not None:
                 self.cars.append(defend)
@@ -195,7 +195,7 @@ class Simulator:
         print("Cleanup complete.")
     
 if __name__ == "__main__":
-    carla_path = r"D:\CARLA\CARLA_0.9.15\WindowsNoEditor\CarlaUE4.exe"
+    carla_path = r"C:\Users\jrr77\Documents\GitHub\CSS-CAV\CarlaUE4.exe"
     port = 2000
     lidar_queue = queue.Queue()
 
