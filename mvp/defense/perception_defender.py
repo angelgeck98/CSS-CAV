@@ -20,7 +20,7 @@ class PerceptionDefender(Car):
         super().__init__(lidar_queue)
         self.name = "perception"
         self.lane_areas_map = None
-        self._load_map()
+        #self._load_map()
 
     # Calculate the total area that has been attacked
     # Generates an attack score; higher scores indicate higher areas of attack
@@ -157,7 +157,7 @@ class PerceptionDefender(Car):
         perception_range = bbox_to_polygon(perception_range)
 
         return area.intersection(perception_range).area > 0.95 * area.area
-
+    """""
     def _load_map(self, map_names=None):
         self.lane_areas_map  ={}
         if map_names is None:
@@ -166,7 +166,7 @@ class PerceptionDefender(Car):
         for map_name in map_names:
             with open(os.path.join(data_root, "carla/{}_lane_areas.pkl".format(map_name)), "rb") as f:
                 self.lane_areas_map[map_name] = pickle.load(f)
-
+    """""
     # Implements the firewall
     # If the affinity score is below 95%, then the car isn't trustworthy and their message is ignored
     # If the Car is trustworthy, call the Car class message sender (the data is accepted)
