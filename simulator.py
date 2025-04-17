@@ -77,12 +77,25 @@ class Simulator:
         self.client.set_timeout(60.0)
         self.world = self.client.get_world()
         print("Successfully connected to CARLA server.")
+        
+        # 1) Create Traffic Manager on port 8000
+        self.traffic_manager = self.client.get_trafficmanager(8000)  # TM default port :contentReference[oaicite:0]{index=0}
+
+        # 2) Enable synchronous mode on TM
+        self.traffic_manager.set_synchronous_mode(True)               # ensures TM updates each tick :contentReference[oaicite:1]{index=1}
+
+        # 3) Enable synchronous mode (and fixed delta) on the world
+        settings = self.world.get_settings()
+        settings.synchronous_mode = True                              # lock client/server ticks :contentReference[oaicite:2]{index=2}
+        settings.fixed_delta_seconds = 0.05                           # e.g., 20 Hz physics :contentReference[oaicite:3]{index=3}
+        self.world.apply_settings(settings)
 
 	# Spawn vehicles into the simulation
     def spawn_vehicles(self):
         print("Spawning vehicles...")
         spawn_points = self.world.get_map().get_spawn_points()
         random.shuffle(spawn_points)
+        tm_port = self.traffic_manager.get_port()
 
         '''
         # Spawn in basic Cars
@@ -103,7 +116,7 @@ class Simulator:
                 break
             spawn_point = spawn_points.pop()
             attack = Attacker(lidar_queue)
-            vehicle = attack.build_car("attack", self.world, spawn_point)
+            vehicle = attack.build_car("attack", self.world, spawn_point, tm_port)
             if vehicle is not None:
                 self.cars.append(attack)
                 print(f"Spawned attacker{i} at {spawn_point}")
@@ -114,7 +127,7 @@ class Simulator:
                 break
             spawn_point = spawn_points.pop()
             defend = PerceptionDefender(lidar_queue)
-            vehicle = defend.build_car("defend", self.world, spawn_point)
+            vehicle = defend.build_car("defend", self.world, spawn_point, tm_port)
             if vehicle is not None:
                 self.cars.append(defend)
                 print(f"Spawned defender{i} at {spawn_point}")
@@ -135,6 +148,7 @@ class Simulator:
         print(f"Running simulation phase with defense_enabled={defense_enabled}...")
         start_time = time.time()
         while time.time() - start_time < self.run_duration:
+            self.world.tick()  # Synchronize the world with the client
             if defense_enabled:
                 for car in self.cars:
                     car.fuse_peer_scans(self.world)
@@ -164,7 +178,7 @@ class Simulator:
 
                     self.frame_id += 1 # Increment Frame counter  
                     pass
-            time.sleep(0.1)
+            time.sleep(0.01)
         
         time.sleep(1) # Wait for last frame to be processed
         self.cleanup()
@@ -199,18 +213,18 @@ if __name__ == "__main__":
     
     # Phase 1 Evaluation - run without firewall
     simulator.run_simulation_phase(defense_enabled=False)
-    print("\nPhase 1 Evaluation Results:")
+    #print("\nPhase 1 Evaluation Results:")
     metrics_phase1 = evaluator.calculate_final_metrics()
-    print(metrics_phase1)
+    #print(metrics_phase1)
     #evaluator.visualize_results()
 
     time.sleep(10)
 
     # Phase 2 Evaluation - run with firewall
     simulator.run_simulation_phase(defense_enabled=True)
-    print("\nPhase 2 Evaluation Results:")
+    #print("\nPhase 2 Evaluation Results:")
     metrics_phase2 = evaluator.calculate_final_metrics()
-    print(metrics_phase2)
+    #print(metrics_phase2)
     #evaluator.visualize_results()
     
     # Show the final results

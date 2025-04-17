@@ -77,7 +77,7 @@ class Car():
         self.affinity_score = temp_score / 2.0
     
     # Spawns in a CARLA model of a car
-    def build_car(self, behavior, world, spawn_point):
+    def build_car(self, behavior, world, spawn_point, tm_port):
         if self.vehicle is not None:
             print("Car already built!")
             return self.vehicle
@@ -99,7 +99,7 @@ class Car():
             print("Spawn failed for behavior:", behavior)
             return None
 
-        self.vehicle.set_autopilot(True)
+        self.vehicle.set_autopilot(True, tm_port)
         
         self.attach_lidar(world)
         
