@@ -127,7 +127,23 @@ class Simulator:
             commands = [carla.command.DestroyActor(x) for x in actor_ids]
             self.client.apply_batch_sync(commands)     
         print("Cleanup complete.")
+        
+    def get_point_cloud(self):
+        # Get the latest point cloud from the queue
+        if not lidar_queue.empty():
+            return lidar_queue.get()
+        return None
 
+    def get_vehicle_boxes(self):
+        # Get the ground truth boxes from the simulation
+        boxes = []
+        for car_obj in self.cars:
+            if car_obj.vehicle is not None:
+                bounding_box = car_obj.vehicle.bounding_box
+                bounding_box.location = car_obj.vehicle.get_transform().location
+                boxes.append(bounding_box)
+        return boxes
+    
 if __name__ == "__main__":
     carla_path = r"C:\Users\jrr77\Documents\GitHub\CSS-CAV\CarlaUE4.exe"
     port = 2000
